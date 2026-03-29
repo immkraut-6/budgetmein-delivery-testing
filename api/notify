@@ -1,0 +1,64 @@
+// ================================================================
+// BudgetMein — Telegram Notification Proxy
+// Vercel Serverless Function (api/notify.js)
+//
+// Environment Variables to set in Vercel Dashboard:
+//   TG_BOT_TOKEN          → your Telegram bot token
+//   TG_CHAT_ORDER         → order notifications chat ID
+//   TG_CHAT_FEEDBACK      → feedback notifications chat ID
+//   TG_CHAT_CUSTOMER      → new customer notifications chat ID
+//   TG_CHAT_DELIVERY_ORDER   → delivery order group chat ID
+//   TG_CHAT_DELIVERY_GROUP   → delivery team group chat ID
+// ================================================================
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { kind, message } = req.body || {};
+  if (!kind || !message) {
+    return res.status(400).json({ error: 'Missing kind or message' });
+  }
+
+  const TOKEN = process.env.TG_BOT_TOKEN;
+  const CHAT_IDS = {
+    order:            process.env.TG_CHAT_ORDER,
+    feedback:         process.env.TG_CHAT_FEEDBACK,
+    customer:         process.env.TG_CHAT_CUSTOMER,
+    delivery_order:   process.env.TG_CHAT_DELIVERY_ORDER,
+    delivery_group:   process.env.TG_CHAT_DELIVERY_GROUP
+  };
+
+  const chatId = CHAT_IDS[kind];
+
+  if (!TOKEN) {
+    return res.status(500).json({ error: 'TG_BOT_TOKEN not configured' });
+  }
+  if (!chatId) {
+    return res.status(400).json({ error: 'Unknown notification kind: ' + kind });
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.telegram.org/bot${TOKEN}/sendMessage`,
+      {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          chat_id:                  chatId,
+          text:                     message,
+          parse_mode:               'HTML',
+          disable_web_page_preview: true
+        })
+      }
+    );
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.ok === false) {
+      return res.status(500).json({ ok: false, error: data.description || 'Telegram error' });
+    }
+    return res.status(200).json({ ok: true });
+  } catch (e) {
+    return res.status(500).json({ ok: false, error: e.message });
+  }
+}
