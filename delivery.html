@@ -25,8 +25,8 @@ const fbApp=initializeApp(FB);
 const db=getFirestore(fbApp);
 const auth=getAuth(fbApp);
 
-// Telegram — Owner notifications
-const TG_TOKEN="8601047628:AAFJ0GppVLF8Fdz-cAlY7C3qAZFZVGGJeHw";
+// ✅ SECURE: Token hidden in Vercel backend api/notify.js
+// Chat group IDs are safe to expose (not secrets)
 const TG_ORDER_GROUP="-5047049397";
 const TG_DELIVERY_GROUP="-5253137106";
 const DELIVERY_SUPPORT_PHONE="+91 9625867683";
@@ -60,10 +60,13 @@ function ensureDeliveryAuth(){
 }
 
 async function tg(chatId,text){
+  // ✅ SECURE: Route via backend — token never exposed in frontend
+  var kind = chatId===TG_DELIVERY_GROUP ? 'delivery_group' : 'delivery_order';
   try{
-    await fetch("https://api.telegram.org/bot"+TG_TOKEN+"/sendMessage",{
-      method:"POST",headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({chat_id:chatId,parse_mode:"HTML",text:text,disable_web_page_preview:true})
+    await fetch('/api/notify',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({kind:kind,message:text})
     });
   }catch(e){}
 }
@@ -676,8 +679,19 @@ function getBoyProfile(){
   try{return JSON.parse(localStorage.getItem('bm_boy_profile')||'null');}catch(e){return null;}
 }
 function saveBoyProfile(p){localStorage.setItem('bm_boy_profile',JSON.stringify(p));}
-function getBoyPin(){return localStorage.getItem('bm_boy_pin')||'';}
-function saveBoyPin(pin){localStorage.setItem('bm_boy_pin',pin);}
+// ── PIN SECURITY: SHA-256 hashing + brute force lockout ──
+async function hashPin(pin){
+  var msgBuffer=new TextEncoder().encode(pin+'bm-salt-2026');
+  var hashBuffer=await crypto.subtle.digest('SHA-256',msgBuffer);
+  var hashArray=Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(function(b){return b.toString(16).padStart(2,'0');}).join('');
+}
+function getBoyPin(){return localStorage.getItem('bm_boy_pin_hash')||'';}
+// Lockout helpers
+function getLockout(){try{return JSON.parse(localStorage.getItem('bm_pin_lockout')||'{"tries":0,"until":0}');}catch(e){return {tries:0,until:0};}}
+function saveLockout(obj){localStorage.setItem('bm_pin_lockout',JSON.stringify(obj));}
+function resetLockout(){localStorage.removeItem('bm_pin_lockout');}
+async function saveBoyPin(pin){var h=await hashPin(pin);localStorage.setItem('bm_boy_pin_hash',h);localStorage.removeItem('bm_boy_pin');}
 
 // ── INIT ──
 (function init(){
@@ -724,7 +738,10 @@ function registerBoy(){
     .then(function(){return window.syncBoyProfileToCloud(profile);})
     .then(function(){
       saveBoyProfile(profile);
-      saveBoyPin(pin);
+      return saveBoyPin(pin);
+    })
+    .then(function(){
+      resetLockout();
       window._tg(window._tgOrderGroup,'🛵 <b>NEW DELIVERY BOY REGISTERED</b>\n'
         +'👤 '+profile.name+'\n'
         +'📱 '+profile.phone+'\n'
@@ -738,6 +755,7 @@ function registerBoy(){
       err.textContent=(e&&e.message)?('Registration failed: '+e.message):'Could not register right now. Please check internet/Firebase and try again.';
       localStorage.removeItem('bm_boy_profile');
       localStorage.removeItem('bm_boy_pin');
+      localStorage.removeItem('bm_boy_pin_hash');
       console.warn('[Delivery] register err',e);
     })
     .finally(function(){
@@ -750,21 +768,52 @@ function loginPin(){
   var pin=['lp1','lp2','lp3','lp4'].map(function(id){return document.getElementById(id).value;}).join('');
   if(pin.length<4)return;
   var err=document.getElementById('pinErr');
-  if(pin===getBoyPin()){
-    var boy=getBoyProfile();
-    enterApp(boy);
-  } else {
-    err.style.display='block';err.textContent='❌ Wrong PIN! Try again.';
+  err.style.display='none';
+
+  // Lockout check
+  var lock=getLockout();
+  var now=Date.now();
+  if(lock.until&&now<lock.until){
+    var secsLeft=Math.ceil((lock.until-now)/1000);
+    err.style.display='block';
+    err.textContent='🔒 Too many wrong tries! Wait '+secsLeft+'s.';
     ['lp1','lp2','lp3','lp4'].forEach(function(id){document.getElementById(id).value='';});
     document.getElementById('lp1').focus();
-    setTimeout(function(){err.style.display='none';},2500);
+    return;
   }
+
+  hashPin(pin).then(function(hashed){
+    if(hashed===getBoyPin()){
+      resetLockout();
+      var boy=getBoyProfile();
+      enterApp(boy);
+    } else {
+      lock=getLockout();
+      lock.tries=(lock.tries||0)+1;
+      if(lock.tries>=3){
+        lock.until=Date.now()+30000; // 30 second lockout
+        lock.tries=0;
+        saveLockout(lock);
+        err.style.display='block';
+        err.textContent='🔒 3 wrong tries! Locked for 30 seconds.';
+      } else {
+        saveLockout(lock);
+        err.style.display='block';
+        err.textContent='❌ Wrong PIN! '+(3-lock.tries)+' tries remaining.';
+      }
+      ['lp1','lp2','lp3','lp4'].forEach(function(id){document.getElementById(id).value='';});
+      document.getElementById('lp1').focus();
+      setTimeout(function(){err.style.display='none';},3000);
+    }
+  });
 }
 
 function notMe(){
   if(!confirm('This will remove your saved profile from this device. Continue?'))return;
   localStorage.removeItem('bm_boy_profile');
   localStorage.removeItem('bm_boy_pin');
+  localStorage.removeItem('bm_boy_pin_hash');
+  localStorage.removeItem('bm_pin_lockout');
   showScreen('regScreen');
 }
 
@@ -913,12 +962,20 @@ function doChangePin(){
   var err=document.getElementById('changePinErr');
   err.style.display='none';err.textContent='';
   if(oldPin.length<4){err.style.display='block';err.textContent='Please enter your current 4-digit PIN!';return;}
-  if(oldPin!==getBoyPin()){err.style.display='block';err.textContent='❌ Current PIN is wrong! Try again.';['cp_o1','cp_o2','cp_o3','cp_o4'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});document.getElementById('cp_o1').focus();return;}
   if(newPin.length<4){err.style.display='block';err.textContent='Please enter a new 4-digit PIN!';return;}
   if(newPin===oldPin){err.style.display='block';err.textContent='New PIN must be different from current PIN!';return;}
-  saveBoyPin(newPin);
-  toggleChangePinSection(false);
-  bmToast('✅ PIN changed successfully!');
+  hashPin(oldPin).then(function(oldHashed){
+    if(oldHashed!==getBoyPin()){
+      err.style.display='block';err.textContent='❌ Current PIN is wrong! Try again.';
+      ['cp_o1','cp_o2','cp_o3','cp_o4'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
+      document.getElementById('cp_o1').focus();
+      return;
+    }
+    return saveBoyPin(newPin).then(function(){
+      toggleChangePinSection(false);
+      bmToast('✅ PIN changed successfully!');
+    });
+  });
 }
 
 // ── TOAST ──
