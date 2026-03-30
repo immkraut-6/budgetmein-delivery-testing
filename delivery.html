@@ -25,8 +25,8 @@ const fbApp=initializeApp(FB);
 const db=getFirestore(fbApp);
 const auth=getAuth(fbApp);
 
-// ✅ SECURE: Token hidden in Vercel backend api/notify.js
-// Chat group IDs are safe to expose (not secrets)
+// Telegram — Owner notifications
+// SECURE: Token is in Vercel Environment Variables — not here
 const TG_ORDER_GROUP="-5047049397";
 const TG_DELIVERY_GROUP="-5253137106";
 const DELIVERY_SUPPORT_PHONE="+91 9625867683";
@@ -60,13 +60,10 @@ function ensureDeliveryAuth(){
 }
 
 async function tg(chatId,text){
-  // ✅ SECURE: Route via backend — token never exposed in frontend
-  var kind = chatId===TG_DELIVERY_GROUP ? 'delivery_group' : 'delivery_order';
   try{
-    await fetch('/api/notify',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({kind:kind,message:text})
+    await fetch("/api/telegram-delivery",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({chatId:chatId,text:text})
     });
   }catch(e){}
 }
