@@ -1,5 +1,26 @@
 {
-  "rewrites": [
-    { "source": "/", "destination": "/delivery.html" }
-  ]
+  "name": "BudgetMein Delivery",
+  "short_name": "BM Delivery",
+  "description": "BudgetMein Delivery Partner App - Accept and manage your deliveries",
+  "start_url": "/delivery.html",
+  "display": "standalone",
+  "background_color": "#0A0C1A",
+  "theme_color": "#FF4500",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://budgetmein.com/logo192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://budgetmein.com/logo512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "food"],
+  "lang": "en-IN"
 }
