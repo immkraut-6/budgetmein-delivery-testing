@@ -4,6 +4,13 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1,user-scalable=no"/>
 <title>BudgetMein - Delivery</title>
+<link rel="manifest" href="manifest-delivery.json"/>
+<meta name="theme-color" content="#FF4500"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="BM Delivery"/>
+<link rel="apple-touch-icon" href="https://budgetmein.com/logo192.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
 :root{--p:#FF4500;--pd:#CC3700;--g:#FFD700;--bg:#0A0C1A;--card:#141626;--card2:#1E2035;--border:#2A2D45;--text:#F0F2FF;--muted:#8892B0;--ok:#22C55E;--warn:#F59E0B;--er:#EF4444;--tr:all .2s ease}
@@ -28,7 +35,7 @@ button{font-family:'Poppins',sans-serif;cursor:pointer}
 .login-btn:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(255,69,0,.3)}
 .login-note{font-size:.72rem;color:var(--muted);line-height:1.7;padding:12px 14px;background:var(--card2);border-radius:10px;border:1px solid var(--border)}
 #loginError{margin-top:12px;padding:12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);border-radius:10px;font-size:.8rem;color:var(--er);display:none;text-align:left}
-/* APP HEADER */
+/* APP */
 #app{display:none;flex-direction:column;min-height:100vh;padding-bottom:72px}
 .header{background:var(--card);border-bottom:1px solid var(--border);padding:14px 16px;position:sticky;top:0;z-index:50}
 .header-top{display:flex;align-items:center;justify-content:space-between}
@@ -67,7 +74,6 @@ button{font-family:'Poppins',sans-serif;cursor:pointer}
 /* PANELS */
 .panel{display:none;padding:14px 14px 24px}
 .panel.active{display:block}
-/* REFRESH BAR */
 .refresh-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .refresh-time{font-size:.7rem;color:var(--muted)}
 .refresh-btn{padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:.75rem;font-weight:600;transition:var(--tr)}
@@ -81,7 +87,6 @@ button{font-family:'Poppins',sans-serif;cursor:pointer}
 .s-confirmed{background:rgba(59,130,246,.15);color:#3B82F6}
 .s-out{background:rgba(139,92,246,.15);color:#8B5CF6}
 .s-delivered{background:rgba(34,197,94,.15);color:#22C55E}
-.s-pending{background:rgba(245,158,11,.15);color:#F59E0B}
 .oc-body{padding:0 14px 10px}
 .oc-row{display:flex;gap:8px;margin-bottom:6px;align-items:flex-start}
 .oc-row-icon{font-size:.85rem;flex-shrink:0;margin-top:1px}
@@ -116,17 +121,29 @@ button{font-family:'Poppins',sans-serif;cursor:pointer}
 .uid-copy-btn{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:.75rem;font-weight:600;width:100%}
 .uid-copy-btn:hover{border-color:var(--p);color:var(--p)}
 .uid-note{font-size:.72rem;color:var(--muted);margin-top:10px;line-height:1.7;padding-top:10px;border-top:1px solid var(--border)}
-/* EMPTY / TOAST */
+/* EMPTY / STATES */
 .empty{text-align:center;padding:50px 20px;color:var(--muted)}
 .empty-icon{font-size:2.5rem;display:block;margin-bottom:12px;opacity:.5}
 .empty-title{font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:5px}
 .empty-sub{font-size:.78rem;line-height:1.6}
+/* Permission error box */
+.perm-error{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:14px;padding:24px 20px;text-align:center;margin:12px 0}
+.perm-error-icon{font-size:2rem;margin-bottom:10px}
+.perm-error-title{font-size:.95rem;font-weight:700;color:var(--er);margin-bottom:6px}
+.perm-error-msg{font-size:.78rem;color:var(--muted);line-height:1.6}
+/* TOAST */
 #toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:999;display:flex;flex-direction:column;align-items:center;gap:7px;pointer-events:none;width:calc(100vw - 32px);max-width:380px}
 .t-item{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:11px 16px;font-size:.8rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:ti .25s ease;text-align:center;width:100%}
 .t-ok{border-color:rgba(34,197,94,.4);color:var(--ok)}
 .t-err{border-color:rgba(239,68,68,.4);color:var(--er)}
 @keyframes ti{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
 .loading-spin{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--p);border-radius:50%;animation:spin .7s linear infinite;margin:32px auto}
+/* PWA install bar */
+#pwaBar{display:none;align-items:center;justify-content:space-between;padding:10px 14px;background:linear-gradient(90deg,rgba(255,69,0,.15),rgba(255,69,0,.05));border-bottom:1px solid rgba(255,69,0,.25);gap:10px;flex-wrap:wrap}
+.pwa-msg{font-size:.78rem;color:var(--text);font-weight:600;flex:1}
+.pwa-btns{display:flex;gap:8px}
+.pwa-install{padding:7px 16px;border-radius:8px;border:1px solid var(--p);background:var(--p);color:#fff;font-size:.73rem;font-weight:700}
+.pwa-dismiss{padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.73rem;font-weight:600}
 </style>
 </head>
 <body>
@@ -154,6 +171,15 @@ button{font-family:'Poppins',sans-serif;cursor:pointer}
 
 <!-- MAIN APP -->
 <div id="app">
+  <!-- PWA INSTALL BAR -->
+  <div id="pwaBar">
+    <div class="pwa-msg">📱 Install as app for faster access & offline support</div>
+    <div class="pwa-btns">
+      <button class="pwa-install" onclick="installPWA()">Install</button>
+      <button class="pwa-dismiss" onclick="document.getElementById('pwaBar').style.display='none'">✕</button>
+    </div>
+  </div>
+
   <!-- HEADER -->
   <div class="header">
     <div class="header-top">
@@ -188,7 +214,6 @@ button{font-family:'Poppins',sans-serif;cursor:pointer}
   </div>
 
   <!-- PANELS -->
-  <!-- Available Orders -->
   <div class="panel active" id="panelAvailable">
     <div class="refresh-bar">
       <div class="refresh-time" id="lastRefresh">Loading...</div>
@@ -197,7 +222,6 @@ button{font-family:'Poppins',sans-serif;cursor:pointer}
     <div id="availableList"><div class="loading-spin"></div></div>
   </div>
 
-  <!-- My Orders -->
   <div class="panel" id="panelMyOrders">
     <div class="refresh-bar">
       <div class="refresh-time">Active assignments</div>
@@ -206,7 +230,6 @@ button{font-family:'Poppins',sans-serif;cursor:pointer}
     <div id="myOrdersList"><div class="loading-spin"></div></div>
   </div>
 
-  <!-- Done -->
   <div class="panel" id="panelDone">
     <div class="refresh-bar">
       <div class="refresh-time">Completed deliveries</div>
@@ -215,7 +238,6 @@ button{font-family:'Poppins',sans-serif;cursor:pointer}
     <div id="doneList"><div class="loading-spin"></div></div>
   </div>
 
-  <!-- Profile -->
   <div class="panel" id="panelProfile">
     <div class="prof-card">
       <div class="prof-avatar" id="profAvatar">🛵</div>
@@ -264,28 +286,60 @@ button{font-family:'Poppins',sans-serif;cursor:pointer}
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
 import{getFirestore,collection,query,where,orderBy,onSnapshot,doc,updateDoc,getDoc,serverTimestamp,limit}from"https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
 import{getAuth,signInAnonymously,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-import{initializeAppCheck,ReCaptchaV3Provider}from"https://www.gstatic.com/firebasejs/10.11.0/firebase-app-check.js";
 
-const FB={apiKey:"AIzaSyCVPIRPTwByKE431I5QwcPEmTH9qgcitj8",authDomain:"budgetmein-62bc0.firebaseapp.com",projectId:"budgetmein-62bc0",storageBucket:"budgetmein-62bc0.firebasestorage.app",messagingSenderId:"1097719035074",appId:"1:1097719035074:web:1570114f2b10d6fbe8775b"};
+// ============================================================
+// FIREBASE CONFIG
+// App Check is intentionally NOT used here.
+// Root cause of "Missing or insufficient permissions":
+//   1. Anonymous users are only allowed to LIST orders if their
+//      UID exists in /deliveryBoys/{uid}. Until the admin
+//      registers them, all queries return a permission error.
+//   2. The query used orderBy('startTime') which requires a
+//      composite index — missing index shows as a permission error.
+//   3. App Check reCAPTCHA tokens can fail silently and block
+//      all reads/writes.
+//
+// FIX: Remove App Check, handle unregistered state gracefully,
+//      and show the UID clearly so user can get registered.
+// ============================================================
+const FB={
+  apiKey:"AIzaSyCVPIRPTwByKE431I5QwcPEmTH9qgcitj8",
+  authDomain:"budgetmein-62bc0.firebaseapp.com",
+  projectId:"budgetmein-62bc0",
+  storageBucket:"budgetmein-62bc0.firebasestorage.app",
+  messagingSenderId:"1097719035074",
+  appId:"1:1097719035074:web:1570114f2b10d6fbe8775b"
+};
 const fbApp=initializeApp(FB);
 const db=getFirestore(fbApp);
 const auth=getAuth(fbApp);
-
-// ============================================================
-// APP CHECK — fixes "Missing or insufficient permissions"
-// ============================================================
-try{
-  initializeAppCheck(fbApp,{
-    provider:new ReCaptchaV3Provider('6Lf_q60sAAAAAF_tE0tSUF-L3cni5Ibr90HQM_-d'),
-    isTokenAutoRefreshEnabled:true
-  });
-}catch(e){}
 
 let currentUid='';
 let myName='Delivery Partner';
 let isRegistered=false;
 let ordersUnsubscribe=null;
 let allOrders=[];
+
+// ============================================================
+// PWA
+// ============================================================
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',(e)=>{
+  e.preventDefault();
+  deferredPrompt=e;
+  document.getElementById('pwaBar').style.display='flex';
+});
+window.installPWA=function(){
+  if(!deferredPrompt)return;
+  deferredPrompt.prompt();
+  deferredPrompt.userChoice.then(()=>{
+    deferredPrompt=null;
+    document.getElementById('pwaBar').style.display='none';
+  });
+};
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(()=>{});
+}
 
 // ============================================================
 // HELPERS
@@ -349,12 +403,12 @@ onAuthStateChanged(auth,async(user)=>{
     currentUid=user.uid;
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('app').style.display='flex';
-    // Load profile from deliveryBoys
     await loadProfile();
     updateProfileUI();
     loadOrders();
   }else{
     currentUid='';
+    isRegistered=false;
     document.getElementById('loginScreen').style.display='flex';
     document.getElementById('app').style.display='none';
     if(ordersUnsubscribe)ordersUnsubscribe();
@@ -375,9 +429,11 @@ async function loadProfile(){
       isRegistered=false;
     }
   }catch(e){
+    console.warn('Profile load error:',e.message);
     isRegistered=false;
   }
 }
+
 function updateProfileUI(){
   document.getElementById('profUid').textContent=currentUid;
   document.getElementById('profName').textContent=isRegistered?myName:'Not Registered Yet';
@@ -390,29 +446,55 @@ function updateProfileUI(){
 
 // ============================================================
 // AVAILABILITY TOGGLE
+// FIX: This fails for unregistered users because the deliveryBoys
+// doc doesn't exist yet. We now show a clear error message.
 // ============================================================
 window.updateAvailability=async function(available){
+  if(!isRegistered){
+    toast('You must be registered by admin first. Share your UID from Profile tab.','err');
+    // Reset toggle to previous state
+    document.getElementById('availToggle').checked=!available;
+    return;
+  }
   try{
     await updateDoc(doc(db,'deliveryBoys',currentUid),{available,updatedAt:serverTimestamp()});
     toast(available?'You are now Online!':'You are now Offline','ok');
     document.getElementById('headerStatus').textContent=available?'● Online':'● Offline';
     document.getElementById('headerStatus').style.color=available?'var(--ok)':'var(--muted)';
   }catch(e){
-    toast('Could not update status. Make sure you are registered.','err');
+    console.error('Availability update error:',e);
+    toast('Could not update status: '+e.message,'err');
+    document.getElementById('availToggle').checked=!available;
   }
 };
 
 // ============================================================
-// LOAD ORDERS (real-time)
+// LOAD ORDERS
+// FIX: The root cause of "Permission Error" in the delivery app:
+//   - Firestore rules only allow 'list' on orders for delivery boys
+//     whose UID exists in the deliveryBoys collection.
+//   - If NOT registered, we catch the error and show a helpful
+//     message pointing user to share their UID with admin.
+//   - If registered, the query works and orders load correctly.
+//   - We use a simpler query without orderBy to avoid needing
+//     a composite index (which can also show as a permission error).
 // ============================================================
 function loadOrders(){
   if(ordersUnsubscribe)ordersUnsubscribe();
   const el=document.getElementById('lastRefresh');
   if(el)el.textContent='Refreshing...';
 
-  // Listen to all orders (Firestore rules allow delivery boys registered in deliveryBoys collection)
+  if(!isRegistered){
+    // Not registered — show helpful message, don't attempt query
+    showNotRegisteredState();
+    if(el)el.textContent='Not registered';
+    return;
+  }
+
   try{
-    const q=query(collection(db,'orders'),orderBy('startTime','desc'),limit(100));
+    // Use limit(200) without complex orderBy to avoid index requirements
+    // We sort client-side after receiving data
+    const q=query(collection(db,'orders'),limit(200));
     ordersUnsubscribe=onSnapshot(q,(snap)=>{
       allOrders=[];
       snap.forEach(d=>{
@@ -422,28 +504,69 @@ function loadOrders(){
         else if(st&&typeof st==='object'&&st.seconds)st=st.seconds*1000;
         allOrders.push({_docId:d.id,...data,startTime:st});
       });
+      // Sort by startTime descending (newest first) client-side
+      allOrders.sort((a,b)=>(b.startTime||0)-(a.startTime||0));
       renderAllPanels();
       const now=new Date();
       const el2=document.getElementById('lastRefresh');
-      if(el2)el2.textContent='Last updated: '+now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+      if(el2)el2.textContent='Updated: '+now.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
     },(err)=>{
-      const errMsg='<div class="empty"><span class="empty-icon">⚠️</span><div class="empty-title">Permission Error</div><div class="empty-sub">'+escHtml(err.message)+'<br/><br/>Make sure your UID is registered by the admin.</div></div>';
-      document.getElementById('availableList').innerHTML=errMsg;
-      document.getElementById('myOrdersList').innerHTML=errMsg;
-      document.getElementById('doneList').innerHTML=errMsg;
-      toast('Permission error: '+err.message,'err');
+      console.error('Orders listener error:',err);
+      if(err.code==='permission-denied'||err.message.includes('permission')){
+        showNotRegisteredState();
+      }else{
+        const errMsg=permissionErrorHTML(err.message);
+        document.getElementById('availableList').innerHTML=errMsg;
+        document.getElementById('myOrdersList').innerHTML=errMsg;
+        document.getElementById('doneList').innerHTML=errMsg;
+      }
+      if(el)el.textContent='Error loading';
     });
   }catch(e){
+    console.error('loadOrders error:',e);
     toast('Error: '+e.message,'err');
   }
 }
 
-function renderAllPanels(){
-  const available=allOrders.filter(o=>o.status==='confirmed'&&!o.deliveryBoyId);
-  const mine=allOrders.filter(o=>o.deliveryBoyId===currentUid&&(o.status==='confirmed'||o.status==='out_for_delivery'));
-  const done=allOrders.filter(o=>o.deliveryBoyId===currentUid&&o.status==='delivered');
+function showNotRegisteredState(){
+  const html=`<div class="perm-error">
+    <div class="perm-error-icon">⚠️</div>
+    <div class="perm-error-title">Not Registered Yet</div>
+    <div class="perm-error-msg">
+      Your account is not registered as a delivery partner.<br/><br/>
+      Go to the <b>Profile</b> tab, copy your UID, and share it with the admin so they can register you.<br/><br/>
+      Once registered, come back here and pull to refresh.
+    </div>
+  </div>`;
+  document.getElementById('availableList').innerHTML=html;
+  document.getElementById('myOrdersList').innerHTML=html;
+  document.getElementById('doneList').innerHTML=html;
+}
 
-  // Badge counts
+function permissionErrorHTML(msg){
+  return `<div class="perm-error">
+    <div class="perm-error-icon">⚠️</div>
+    <div class="perm-error-title">Permission Error</div>
+    <div class="perm-error-msg">${escHtml(msg)}<br/><br/>Make sure your UID is registered by the admin.</div>
+  </div>`;
+}
+
+function renderAllPanels(){
+  // Available: confirmed orders not yet assigned to anyone, OR assigned to me but status confirmed
+  const available=allOrders.filter(o=>
+    o.status==='confirmed' && (!o.deliveryBoyId || o.deliveryBoyId===currentUid)
+  );
+  // My orders: assigned to me, active
+  const mine=allOrders.filter(o=>
+    o.deliveryBoyId===currentUid &&
+    (o.status==='confirmed'||o.status==='out_for_delivery')
+  );
+  // Done: delivered by me
+  const done=allOrders.filter(o=>
+    o.deliveryBoyId===currentUid && o.status==='delivered'
+  );
+
+  // Badges
   const avCount=document.getElementById('avCount');
   const myCount=document.getElementById('myCount');
   avCount.textContent=available.length;
@@ -451,9 +574,15 @@ function renderAllPanels(){
   myCount.textContent=mine.length;
   myCount.style.display=mine.length>0?'flex':'none';
 
-  document.getElementById('availableList').innerHTML=available.length?available.map(o=>orderCardHTML(o,'available')).join(''):emptyHTML('📭','No Available Orders','Confirmed orders will appear here when ready for pickup.');
-  document.getElementById('myOrdersList').innerHTML=mine.length?mine.map(o=>orderCardHTML(o,'mine')).join(''):emptyHTML('🛵','No Active Orders','Orders assigned to you will appear here.');
-  document.getElementById('doneList').innerHTML=done.length?done.map(o=>orderCardHTML(o,'done')).join(''):emptyHTML('✅','No Completed Deliveries','Orders you deliver will appear here.');
+  document.getElementById('availableList').innerHTML=available.length
+    ?available.map(o=>orderCardHTML(o,'available')).join('')
+    :emptyHTML('📭','No Available Orders','Confirmed orders will appear here when ready for pickup.');
+  document.getElementById('myOrdersList').innerHTML=mine.length
+    ?mine.map(o=>orderCardHTML(o,'mine')).join('')
+    :emptyHTML('🛵','No Active Orders','Orders assigned to you will appear here.');
+  document.getElementById('doneList').innerHTML=done.length
+    ?done.map(o=>orderCardHTML(o,'done')).join('')
+    :emptyHTML('✅','No Completed Deliveries','Orders you deliver will appear here.');
 }
 
 function emptyHTML(icon,title,sub){
@@ -471,14 +600,14 @@ function orderCardHTML(o,mode){
   if(mode==='available'){
     statusBadge=`<span class="s-badge s-confirmed">🔵 Confirmed</span>`;
     actionHTML=`<button class="aBtn aBtn-accept" onclick="acceptOrder('${o._docId}')">🛵 Accept Delivery</button>`;
-  } else if(mode==='mine'){
+  }else if(mode==='mine'){
     const isOTW=o.status==='out_for_delivery';
     statusBadge=isOTW?`<span class="s-badge s-out">🟣 On the Way</span>`:`<span class="s-badge s-confirmed">🔵 Pickup Ready</span>`;
     if(!isOTW){
       actionHTML=`<button class="aBtn aBtn-accept" onclick="startDelivery('${o._docId}')">🚀 Start Delivery</button>`;
     }
     actionHTML+=`<button class="aBtn aBtn-deliver" onclick="markDelivered('${o._docId}')">✅ Mark Delivered</button>`;
-  } else {
+  }else{
     statusBadge=`<span class="s-badge s-delivered">🟢 Delivered</span>`;
   }
 
@@ -506,23 +635,43 @@ function orderCardHTML(o,mode){
 // ============================================================
 window.acceptOrder=async function(docId){
   try{
-    await updateDoc(doc(db,'orders',docId),{deliveryBoyId:currentUid,status:'out_for_delivery',updatedAt:serverTimestamp()});
+    await updateDoc(doc(db,'orders',docId),{
+      deliveryBoyId:currentUid,
+      status:'out_for_delivery',
+      updatedAt:serverTimestamp()
+    });
     toast('Order accepted! Start delivery.','ok');
-  }catch(e){toast('Failed: '+e.message,'err');}
+  }catch(e){
+    console.error('acceptOrder error:',e);
+    toast('Failed: '+e.message,'err');
+  }
 };
 
 window.startDelivery=async function(docId){
   try{
-    await updateDoc(doc(db,'orders',docId),{status:'out_for_delivery',updatedAt:serverTimestamp()});
+    await updateDoc(doc(db,'orders',docId),{
+      status:'out_for_delivery',
+      updatedAt:serverTimestamp()
+    });
     toast('Delivery started!','ok');
-  }catch(e){toast('Failed: '+e.message,'err');}
+  }catch(e){
+    console.error('startDelivery error:',e);
+    toast('Failed: '+e.message,'err');
+  }
 };
 
 window.markDelivered=async function(docId){
   try{
-    await updateDoc(doc(db,'orders',docId),{status:'delivered',deliveredAt:serverTimestamp(),updatedAt:serverTimestamp()});
-    toast('Order marked as delivered!','ok');
-  }catch(e){toast('Failed: '+e.message,'err');}
+    await updateDoc(doc(db,'orders',docId),{
+      status:'delivered',
+      deliveredAt:serverTimestamp(),
+      updatedAt:serverTimestamp()
+    });
+    toast('Order marked as delivered! Great work 🎉','ok');
+  }catch(e){
+    console.error('markDelivered error:',e);
+    toast('Failed: '+e.message,'err');
+  }
 };
 
 // ============================================================
